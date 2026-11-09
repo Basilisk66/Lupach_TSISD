@@ -1,0 +1,8 @@
+{
+  "timezone": "Europe/Moscow",
+  "routes": [
+    {"route": "12", "type": "bus",  "destination": "Центр",   "times": ["06:30", "07:15", "08:00", "12:00", "18:45", "23:50"]},
+    {"route": "5",  "type": "tram", "destination": "Вокзал",  "times": ["00:10", "06:45", "08:00", "09:30", "17:20"]},
+    {"route": "M1", "type": "metro","destination": "Север",   "times": ["05:50", "08:05", "12:30", "22:15"]}
+  ]
+}
