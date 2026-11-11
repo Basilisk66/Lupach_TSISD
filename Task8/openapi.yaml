@@ -1,0 +1,233 @@
+openapi: 3.0.3
+info:
+  title: API расписания транспорта
+  version: 1.0.0
+  description: >
+    Остановки и ближайшие рейсы городского транспорта.
+servers:
+  - url: http://localhost:4010/api/v1
+    description: Mock-сервер (Prism)
+tags:
+  - name: stops
+    description: Остановки
+  - name: trips
+    description: Рейсы
+paths:
+  /stops:
+    get:
+      tags: [stops]
+      summary: Поиск остановки по названию
+      operationId: searchStops
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Часть названия остановки (минимум 2 символа), регистр не важен.
+          schema:
+            type: string
+            minLength: 2
+          example: Ленин
+      responses:
+        '200':
+          description: Список подходящих остановок
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stop'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /stops/{stopId}:
+    get:
+      tags: [stops]
+      summary: Получить остановку по id
+      operationId: getStop
+      parameters:
+        - $ref: '#/components/parameters/StopId'
+      responses:
+        '200':
+          description: Остановка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stop'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /stops/{stopId}/departures:
+    get:
+      tags: [stops]
+      summary: Ближайшие рейсы на остановке
+      operationId: listDepartures
+      parameters:
+        - $ref: '#/components/parameters/StopId'
+        - name: limit
+          in: query
+          description: Сколько отправлений вернуть.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 5
+      responses:
+        '200':
+          description: Отправления, отсортированные по времени
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Departure'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /trips/{tripId}:
+    get:
+      tags: [trips]
+      summary: Получить рейс по id
+      operationId: getTrip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          description: Идентификатор рейса.
+          schema:
+            type: string
+          example: T-25-0814
+      responses:
+        '200':
+          description: Рейс со списком остановок маршрута
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /health:
+    get:
+      summary: Проверка работоспособности
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Сервис работает
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+components:
+  parameters:
+    StopId:
+      name: stopId
+      in: path
+      required: true
+      description: Идентификатор остановки.
+      schema:
+        type: string
+      example: S-102
+  responses:
+    BadRequest:
+      description: Неверные параметры запроса
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Объект не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Stop:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          example: S-102
+        name:
+          type: string
+          example: Площадь Ленина
+        direction:
+          type: string
+          description: Направление движения у остановки.
+          example: в центр
+        latitude:
+          type: number
+          format: double
+          example: 55.7558
+        longitude:
+          type: number
+          format: double
+          example: 37.6173
+    Departure:
+      type: object
+      required: [tripId, route, departureTime]
+      properties:
+        tripId:
+          type: string
+          example: T-25-0814
+        route:
+          $ref: '#/components/schemas/Route'
+        destination:
+          type: string
+          description: Конечная остановка рейса.
+          example: Вокзал
+        departureTime:
+          type: string
+          format: date-time
+          example: '2025-03-14T08:14:00+03:00'
+        minutesUntil:
+          type: integer
+          description: Минут до отправления (округление вниз).
+          example: 7
+    Route:
+      type: object
+      required: [number, type]
+      properties:
+        number:
+          type: string
+          example: '25'
+        type:
+          type: string
+          enum: [bus, tram, trolleybus]
+    Trip:
+      type: object
+      required: [id, route, stops]
+      properties:
+        id:
+          type: string
+          example: T-25-0814
+        route:
+          $ref: '#/components/schemas/Route'
+        stops:
+          type: array
+          items:
+            type: object
+            required: [stopId, name, arrivalTime]
+            properties:
+              stopId:
+                type: string
+                example: S-102
+              name:
+                type: string
+                example: Площадь Ленина
+              arrivalTime:
+                type: string
+                format: date-time
+                example: '2025-03-14T08:14:00+03:00'
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: STOP_NOT_FOUND
+        message:
+          type: string
+          example: Остановка не найдена
