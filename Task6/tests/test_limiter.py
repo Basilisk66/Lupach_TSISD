@@ -29,7 +29,7 @@ class RateLimiterTests(unittest.TestCase):
         rl = RateLimiter(3, 10, self.clock)
         results = [rl.allow("a") for _ in range(3)]
         self.assertTrue(all(r.allowed for r in results))
-        self.assertEqual([r.remaining for r in results], [2, 1, 1])
+        self.assertEqual([r.remaining for r in results], [2, 1, 0])
 
     def test_blocks_over_limit(self):
         rl = RateLimiter(2, 10, self.clock)
