@@ -1,0 +1,6 @@
+{
+  "limit": 5,
+  "window_seconds": 60,
+  "algorithm": "sliding-window-log",
+  "storage": "in-memory"
+}

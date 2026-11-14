@@ -1,0 +1,46 @@
+name: Task 6 CI/CD
+
+on:
+  push:
+    paths:
+      - 'Task6/**'
+      - '.github/workflows/task6-ci.yml'
+  pull_request:
+    - 'Task6/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    defaults:
+      run:
+        working-directory: Task6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Task6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Mock deploy
+        run: python scripts/deploy.py
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: limits-config
+          path: Task6/public/
