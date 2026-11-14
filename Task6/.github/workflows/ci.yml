@@ -5,7 +5,8 @@ on:
     paths:
       - 'Task6/**'
   pull_request:
-    - 'Task6/**'
+    paths:
+      - 'Task6/**'
 
 jobs:
   test:
