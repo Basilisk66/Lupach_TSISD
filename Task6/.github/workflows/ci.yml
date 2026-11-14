@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - 'Task6/**'
-      - '.github/workflows/task6-ci.yml'
   pull_request:
     - 'Task6/**'
 
