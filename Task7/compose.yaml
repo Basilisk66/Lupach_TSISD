@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: transport-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-transport}
+      POSTGRES_USER: ${DB_USER:-transport_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-transport_user} -d ${DB_NAME:-transport}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - backend
+
+  api:
+    build: ./app
+    container_name: transport-api
+    environment:
+      DB_HOST: db 
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-transport}
+      DB_USER: ${DB_USER:-transport_user}
+      DB_PASSWORD: ${DB_PASSWORD:-change}
+    ports:
+      - "${API_PORT:-8000}:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+
+volumes:
+  pgdata:
+
+networks:
+  backend:
